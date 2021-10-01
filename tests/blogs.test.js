@@ -1,10 +1,12 @@
-const mongoose = require("mongoose");
 const supertest = require("supertest");
 const Blog = require("../models/blog");
+const mongoose = require("mongoose");
 const app = require("../app");
 const api = supertest(app);
 jest.setTimeout(100000);
 
+const token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InBhbmRhX2RyYWdvbiIsImlkIjoiNjE1NzBlNmRiMTE5OWIyZGM5NGNiMGI0IiwiaWF0IjoxNjMzMTAzNTE3LCJleHAiOjE2MzMxMDcxMTd9.ojMOJ6oHmtmey9RyHhvUj0yjI677JYFaWk6qX_HQ2EU";
 const blogs = [
   {
     title: "React patterns",
@@ -74,7 +76,13 @@ describe("viewing blogs", () => {
       url: "https://javascript.info",
     };
 
-    const res = await api.post("/api/blogs").send(newBlog);
+    const rebecca = await api.get("/api/users");
+    console.log(rebecca.body);
+
+    const res = await api
+      .post("/api/blogs")
+      .set("Authorization", token)
+      .send(newBlog);
     expect(res.body.likes).toBe(0);
   });
 });
@@ -90,6 +98,7 @@ describe("adding blogs", () => {
 
     await api
       .post("/api/blogs")
+      .set("Authorization", token)
       .send(newBlog)
       .expect(200)
       .expect("Content-Type", /application\/json/);
@@ -102,7 +111,26 @@ describe("adding blogs", () => {
   });
 
   test("cannot add invalid blog", async () => {
-    await api.post("/api/blogs").send({ author: "Jon Doe" }).expect(400);
+    await api
+      .post("/api/blogs")
+      .set("Authorization", token)
+      .send({ author: "Jon Doe" })
+      .expect(400);
+  });
+
+  test("cannot add without token", async () => {
+    const newBlog = {
+      author: "Jon Doe",
+      title: "JavaScript Arrow Functions",
+      url: "https://reactjs.org",
+      likes: 3,
+    };
+
+    await api
+      .post("/api/blogs")
+      .set("authorization", "abcd1234")
+      .send(newBlog)
+      .expect(401);
   });
 });
 
@@ -112,7 +140,11 @@ describe("edit/delete blogs", () => {
   });
 
   test("cannot delete by invalid id", async () => {
-    await api.delete("/api/blogs").send("abcd1234").expect(404);
+    await api
+      .delete("/api/blogs")
+      .set("Authorization", token)
+      .send("abcd1234")
+      .expect(404);
   });
 });
 

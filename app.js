@@ -1,5 +1,6 @@
 const middleware = require("./utils/middleware");
 const blogRouter = require("./controllers/blog");
+const userRouter = require("./controllers/users");
 const config = require("./utils/config");
 const mongoose = require("mongoose");
 const express = require("express");
@@ -21,6 +22,7 @@ mongoose
   });
 
 app.use("/api/blogs", blogRouter);
+app.use("/api/users", userRouter);
 app.use(middleware.errHandler);
 
 module.exports = app;
