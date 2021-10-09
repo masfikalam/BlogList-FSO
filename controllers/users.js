@@ -17,6 +17,21 @@ userRouter.get("/", async (req, res) => {
   res.json(data);
 });
 
+userRouter.get("/:id", async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id).populate("notes", {
+      title: 1,
+      id: 1,
+    });
+    delete user.password;
+    user
+      ? res.json({ name: user.name, id: user.id, blogs: user.notes })
+      : res.status(404).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 userRouter.post("/", async (req, res, next) => {
   try {
     const body = req.body;

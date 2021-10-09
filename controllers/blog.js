@@ -13,7 +13,9 @@ blogRouter.get("/", async (req, res) => {
 
 blogRouter.get("/:id", async (req, res, next) => {
   try {
-    const blog = await Blog.findById(req.params.id);
+    const blog = await Blog.findById(req.params.id).populate("user", {
+      name: 1,
+    });
     blog ? res.json(blog) : res.status(404).end();
   } catch (err) {
     next(err);
@@ -45,6 +47,19 @@ blogRouter.delete("/:id", userExtractor, async (req, res, next) => {
     } else {
       res.status(401).end();
     }
+  } catch (err) {
+    next(err);
+  }
+});
+
+blogRouter.put("/:id/comment", async (req, res, next) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    delete blog.user;
+    blog.comments = [...blog.comments, req.body.comment];
+
+    await Blog.findByIdAndUpdate(req.params.id, blog);
+    res.json(blog);
   } catch (err) {
     next(err);
   }
